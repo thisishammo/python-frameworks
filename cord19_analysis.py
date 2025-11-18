@@ -30,7 +30,7 @@ print("\n--- PART 1: DATA LOADING AND BASIC EXPLORATION ---\n")
 
 # Step 1: Load the data
 print("Loading metadata_small.csv file...")
-df = pd.read_csv('metadata_small.csv', low_memory=False)
+df = pd.read_csv('metadata_small.csv', encoding='utf-16', low_memory=False)
 print("✓ Data loaded successfully!")
 
 # Step 2: Examine first few rows
