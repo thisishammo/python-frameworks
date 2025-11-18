@@ -46,26 +46,41 @@ st.markdown("""
 @st.cache_data
 def load_data():
     """Load and preprocess the CORD-19 metadata"""
+
+    def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+        df = df.copy()
+        if 'title' in df.columns:
+            df = df[df['title'].notna()]
+
+        if 'publish_time' in df.columns:
+            df['publish_time'] = pd.to_datetime(df['publish_time'], errors='coerce')
+            df = df[df['publish_time'].notna()]
+            df['year'] = df['publish_time'].dt.year
+        else:
+            raise ValueError("Expected 'publish_time' column to exist in the metadata.")
+
+        if 'abstract' in df.columns:
+            df['abstract'] = df['abstract'].fillna('')
+            df['abstract_word_count'] = df['abstract'].apply(
+                lambda x: len(str(x).split()) if pd.notna(x) else 0
+            )
+            df['has_abstract'] = df['abstract_word_count'] > 0
+        else:
+            df['abstract'] = ''
+            df['abstract_word_count'] = 0
+            df['has_abstract'] = False
+
+        df = df[(df['year'] >= 2010) & (df['year'] <= 2024)]
+        return df
+
     try:
         # Load the cleaned data if it exists, otherwise load raw data
         try:
             df = pd.read_csv('metadata_cleaned.csv', low_memory=False)
         except FileNotFoundError:
             df = pd.read_csv('metadata.csv', low_memory=False)
-            # Basic cleaning
-            df = df[df['title'].notna()]
-            df['publish_time'] = pd.to_datetime(df['publish_time'], errors='coerce')
-            df = df[df['publish_time'].notna()]
-            df['year'] = df['publish_time'].dt.year
-            df['abstract'] = df['abstract'].fillna('')
-            df['abstract_word_count'] = df['abstract'].apply(
-                lambda x: len(str(x).split()) if pd.notna(x) else 0
-            )
-            df['has_abstract'] = df['abstract_word_count'] > 0
-            # Filter reasonable year range
-            df = df[(df['year'] >= 2010) & (df['year'] <= 2024)]
-        
-        return df
+
+        return preprocess_dataframe(df)
     except Exception as e:
         st.error(f"Error loading data: {e}")
         st.stop()
