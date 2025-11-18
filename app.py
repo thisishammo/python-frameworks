@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from wordcloud import WordCloud
 import plotly.express as px
-import plotly.graph_objects as gos
+import plotly.graph_objects as go
 from collections import Counter
 import re
 
